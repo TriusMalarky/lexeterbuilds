@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "lexeter.py", line 6, in <module>
+  File "lib\core.pyc", line 42, in lex_init
+  File "lib\core.pyc", line 38, in load
+EOFError: Ran out of input
+Traceback (most recent call last):
+  File "lexeter.py", line 6, in <module>
+  File "lib\core.pyc", line 42, in lex_init
+  File "lib\core.pyc", line 38, in load
+EOFError: Ran out of input

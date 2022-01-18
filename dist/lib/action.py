@@ -41,7 +41,10 @@ class playerAct(core):
             'pickupAlias':'pickup',
             'pickAlias':'pick',
             'interact':'.in',
-            'interactAlias':'interact'
+            'interactAlias':'interact',
+            'inventory':'.inv',
+            'invenAlias':'inventory',
+            'invAlias':'inv'
                     }
         self.helparray = [
             'Help: Shows help screen. | .h, help',
@@ -49,6 +52,7 @@ class playerAct(core):
             "Pickup: Pick an item up. | .p, pick, pickup",
             "Interact: Interact with an object. | .in, interact",
             'Inspect: Look at the current room and its contents. | .i, inspect',
+            'Inventory: Take inventory, see what you have in your pockets. | .inv, inv, inventory',
             'Wait: Waste a moment. | .w, wait'
         ]
         self.debug=self.world.debug;self.rDebug()
@@ -88,7 +92,8 @@ class playerAct(core):
             exec("self.world.map."+newzone+"="+zone+"(self.world)")
         for i in self.world.map.route[self.player.room]:
             print(" - " + i)
-        def moveToLoop(self):
+
+        def moveToLoop(self): # <- define loop
             newloc = input(": ")
             if newloc in self.world.map.route[self.player.room]:
                 self.player.room = newloc
@@ -96,13 +101,48 @@ class playerAct(core):
             else:
                 print("That's not an option, try again.")
                 moveToLoop(self)
-        moveToLoop(self)
-        self.inspect()
+        moveToLoop(self) # <- run loop
+
+        # Run inspection of room
+        roomtitle = self.world.player.room
+        room = getattr(self.world.map, roomtitle)
+        clearConsole()
+        print(random.choice(room.descriptions))
+
     def inspect(self):
         clearConsole()
         roomtitle = self.world.player.room
         room = getattr(self.world.map,roomtitle)
-        print(random.choice(room.descriptions))
+        list = ['room','inventory']
+        for i in room.loot:
+            list.append(i)
+        print("What do you want to inspect?")
+        for i in list:
+            print(" - "+i)
+        def invLoop(world):
+            choice = input(": ")
+            if choice in world.player.inventory:
+                item = getattr(world.item, choice)
+                print(random.choice(item.descriptions))
+            else:
+                invLoop(world)
+        def loop(self,world):
+            choice = input(": ")
+            if choice in list:
+                if choice == 'room':
+                    print(random.choice(room.descriptions))
+                elif choice == 'inventory':
+                    clearConsole()
+                    print("Inspect an item in inventory:")
+                    self.inventory()
+                    invLoop(world)
+                else:
+                    item = getattr(world.item,choice)
+                    print(random.choice(item.descriptions))
+            else:
+                print("That's not an option. Try again.")
+                loop(world)
+        loop(self,self.world)
     def moveAlias(self):
         self.moveTo()
     def inspectAlias(self):
@@ -128,12 +168,19 @@ class playerAct(core):
         if hasattr(room,'loot'):
             if len(room.loot) > 0:
                 print("What do you want to pick up?")
+                print(' - all')
                 for i in room.loot:
                     print(" - "+i)
                 choice = input(": ")
                 def loop(choice,room):
-                    if choice in room.loot:
+                    if choice == 'all':
+                        for i in room.loot:
+                            self.player.inventory.append(i)
+                            room.loot.remove(i)
+                            print("You picked up "+i)
+                    elif choice in room.loot:
                         room.loot.remove(choice)
+                        self.player.inventory.append(choice)
                         print("You picked up "+choice)
                     else:
                         print("That's not an option, try again.")
@@ -151,3 +198,21 @@ class playerAct(core):
         pass
     def interactAlias(self):
         self.interact()
+    def inventory(self):
+        clearConsole()
+        print("You have:")
+        print(self.world.player.inventory)
+        inv = self.world.player.inventory
+        list = []
+        for i in inv:
+            count = inv.count(i)
+            list.append(" - "+i+" "+str(count))
+        for n in list:
+            print(n)
+            for x in list:
+                if x == n:
+                    list.remove(x)
+    def invenAlias(self):
+        self.inventory()
+    def invAlias(self):
+        self.inventory()
